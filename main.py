@@ -24,7 +24,8 @@ def background():
 
 def paint(sdf, box, color, alpha=1.0, soft=1.0):
     """Blend color where sdf(x, y) < 0, anti-aliased over `soft` pixels."""
-    x0, y0, x1, y1 = (int(max(0, min(W - 1, v))) for v in box)
+    pad = soft  # a soft edge reaches past the shape's own box
+    x0, y0, x1, y1 = (int(max(0, min(W - 1, v))) for v in (box[0] - pad, box[1] - pad, box[2] + pad, box[3] + pad))
     for y in range(y0, y1 + 1):
         for x in range(x0, x1 + 1):
             d = sdf(x + 0.5, y + 0.5)
@@ -110,6 +111,8 @@ def kitten():
     # head
     paint(*ellipse(512, 470, 318, 262), outline)
     paint(*ellipse(512, 470, 310, 254), fur)
+    # soft light on the top of the head for a rounder look
+    paint(*ellipse(470, 380, 200, 120), hexc("#ffc28e"), 0.45, 40)
     # forehead stripes
     for dx, ln in ((-48, 70), (0, 92), (48, 70)):
         paint(*capsule(512 + dx, 232, 512 + dx * 0.8, 232 + ln, 13), shade)
@@ -140,16 +143,50 @@ def kitten():
         for dy, ang in ((0, -0.08), (24, 0.06), (48, 0.2)):
             x0 = 512 + sgn * 160
             paint(*capsule(x0, 575 + dy, x0 + sgn * 150, 575 + dy + ang * 150 - 20, 3.2), outline, 0.75)
-    # paws holding a little heart
-    paint(*heart(512, 770, 70), outline)
-    paint(*heart(512, 772, 62), hexc("#ff6f91"))
-    paint(*ellipse(488, 742, 14, 9, -0.6), white, 0.6)
+    # mint scarf around the neck, a knot and a hanging end
+    mint, mint_d = hexc("#8fe3c8"), hexc("#5cc4a5")
+    # a band that follows the chin, so it reads as wrapped around the neck
+    head_d, body_d = ellipse(512, 470, 318, 262)[0], ellipse(512, 760, 255, 175)[0]
+    def scarf(x, y, w=24):
+        # just below the chin's outline, and never past the body's edge
+        return max(abs(head_d(x, y) - 18) - w, 640 - y, body_d(x, y) + (30 - w))
+    paint(lambda x, y: scarf(x, y, 30), (250, 630, 774, 770), outline)
+    paint(scarf, (250, 630, 774, 770), mint)
+    for t in (-2, -1, 0, 1, 2):
+        paint(*capsule(512 + t * 70, 718 - abs(t) * 12, 512 + t * 70 + 10, 742 - abs(t) * 12, 3), mint_d, 0.7)
+    paint(*poly([(612, 715), (662, 705), (690, 820), (646, 830)], 6), outline)
+    paint(*poly([(617, 719), (657, 711), (683, 815), (650, 823)], 3), mint_d)
+    for t in range(3):
+        paint(*capsule(632 + t * 8, 760 + t * 22, 670 + t * 8, 752 + t * 22, 3), mint, 0.9)
+    # a baby chick snuggled in the kitten's arms
+    chick, chick_d, beak = hexc("#ffe066"), hexc("#f5c542"), hexc("#ff9f43")
+    cy = 805
+    paint(*ellipse(512, cy, 104, 92), outline)
+    paint(*ellipse(512, cy, 97, 85), chick)
+    paint(*ellipse(512, cy + 30, 66, 44), hexc("#fff1a8"), 0.8, 6)
+    paint(*ellipse(520, cy - 92, 24, 10, 0.5), chick_d)      # a little tuft on top
+    paint(*ellipse(504, cy - 96, 18, 8, -0.4), chick_d)
     for sgn in (-1, 1):
-        px = 512 + sgn * 92
-        paint(*ellipse(px, 800, 58, 46), outline)
-        paint(*ellipse(px, 800, 51, 39), cream)
+        ex = 512 + sgn * 34
+        def closed_eye(x, y, ex=ex):
+            return abs(math.hypot(x - ex, y - (cy - 22)) - 14) - 3.8 if y > cy - 22 else 1e3
+        paint(closed_eye, (ex - 22, cy - 26, ex + 22, cy), dark)
+        paint(*ellipse(512 + sgn * 58, cy + 2, 16, 10), pink, 0.65, 4)
+    paint(*poly([(497, cy - 8), (527, cy - 8), (512, cy + 12)], 4), beak)
+    # daisy crown between the ears
+    for n, (cx, cy) in enumerate(((330, 268), (390, 232), (452, 214), (512, 208), (572, 214), (634, 232), (694, 268))):
+        paint(*capsule(cx - 30, cy + 6, cx + 30, cy + 6, 4), hexc("#6cbf6a"), 0.9)
+        for k in range(8):
+            a = k * math.pi / 4 + n * 0.3
+            paint(*ellipse(cx + math.cos(a) * 15, cy + math.sin(a) * 15, 11, 6, a), outline, 0.5)
+            paint(*ellipse(cx + math.cos(a) * 15, cy + math.sin(a) * 15, 9.5, 5, a), white)
+        paint(*ellipse(cx, cy, 9, 9), hexc("#ffc93c"))
+    for sgn in (-1, 1):
+        px = 512 + sgn * 100
+        paint(*ellipse(px, 850, 52, 42, sgn * 0.5), outline)
+        paint(*ellipse(px, 850, 45, 35, sgn * 0.5), cream)
         for t in (-1, 0, 1):
-            paint(*capsule(px + t * 20, 828, px + t * 20, 838, 2.5), outline, 0.6)
+            paint(*capsule(px + t * 17 - sgn * 8, 868 + t * sgn * 8, px + t * 17 - sgn * 8, 878 + t * sgn * 8, 2.5), outline, 0.6)
 
 
 def decor():

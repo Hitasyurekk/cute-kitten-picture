@@ -102,6 +102,14 @@ def kitten():
     paint(*ellipse(512, 760, 255, 175), outline)
     paint(*ellipse(512, 760, 247, 167), fur)
     paint(*ellipse(512, 800, 150, 110), cream)
+    # little hind feet peeking out at the bottom
+    for sgn in (-1, 1):
+        fx = 512 + sgn * 170
+        paint(*ellipse(fx, 905, 62, 34), outline)
+        paint(*ellipse(fx, 905, 55, 27), cream)
+        for t in (-1, 0, 1):
+            paint(*capsule(fx + t * 18, 885, fx + t * 18, 895, 2.5), outline, 0.55)
+        paint(*ellipse(fx, 912, 16, 10), pink, 0.7)
     # ears
     for sgn in (-1, 1):
         ex = 512 + sgn * 205
@@ -125,8 +133,7 @@ def kitten():
         paint(*ellipse(ex, 490, 60, 66), hexc("#5b3b5f"), 0.7)
         paint(*ellipse(ex - 22, 438, 28, 32), white)
         paint(*ellipse(ex + 26, 505, 12, 13), white)
-        paint(*ellipse(ex + sgn * 6, 540, 22, 10), white, 0.25)
-        # blush
+        paint(*ellipse(ex + sgn * 6, 540, 22, 10), white, 0.25)        # blush
         paint(*ellipse(512 + sgn * 230, 585, 58, 34), pink, 0.55, 6)
     # nose and mouth
     paint(*poly([(490, 552), (534, 552), (512, 578)], 6), hexc("#ff7f9f"))
@@ -189,6 +196,15 @@ def kitten():
             paint(*capsule(px + t * 17 - sgn * 8, 868 + t * sgn * 8, px + t * 17 - sgn * 8, 878 + t * sgn * 8, 2.5), outline, 0.6)
 
 
+def bokeh():
+    # soft out-of-focus lights behind everything
+    cols = [hexc("#ffc1dc"), hexc("#ffe4a8"), hexc("#d9c8ff"), hexc("#c8f0ff")]
+    for n, (cx, cy, r) in enumerate(((120, 300, 70), (900, 110, 90), (980, 760, 60), (60, 880, 80), (300, 60, 45),
+                                     (720, 980, 55), (860, 350, 40), (180, 720, 35), (560, 40, 30))):
+        f, b = ellipse(cx, cy, r, r)
+        paint(f, b, cols[n % 4], 0.45, 18)
+
+
 def decor():
     for cx, cy, s, a in ((150, 170, 34, 0.8), (880, 220, 26, 0.7), (110, 640, 22, 0.6), (930, 560, 30, 0.75),
                          (220, 920, 20, 0.6), (840, 930, 24, 0.65)):
@@ -215,6 +231,7 @@ def write_png(path):
 
 
 background()
+bokeh()
 decor()
 kitten()
 write_png(os.environ.get("ENTRY_OUT", "/output/entry.png"))
